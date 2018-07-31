@@ -31,6 +31,10 @@ def segment_signal(data, window_size=90):
     print("Segment signal function")
     segments = np.empty((0, window_size, 3))
     labels = np.empty((0))
+    timestamp = np.empty((0))
+    xAxis = np.empty((0))
+    yAxis = np.empty((0))
+    zAxis = np.empty((0))
     for (start, end) in windows(data['timestamp'], window_size):
         x = data["x-axis"][start:end]
         y = data["y-axis"][start:end]
@@ -38,7 +42,11 @@ def segment_signal(data, window_size=90):
         if (len(dataset['timestamp'][start:end]) == window_size):
             segments = np.vstack([segments, np.dstack([x, y, z])])
             labels = np.append(labels, stats.mode(data["activity"][start:end])[0][0])
-    return segments, labels
+            timestamp = np.append(timestamp, stats.mode(data["timestamp"][start:end])[0][0])
+            xAxis = np.append(xAxis,stats.mode(data['x-axis'][start:end])[0][0])
+            yAxis = np.append(yAxis, stats.mode(data['y-axis'][start:end])[0][0])
+            zAxis = np.append(zAxis, stats.mode(data['z-axis'][start:end])[0][0])
+    return segments, labels, timestamp, xAxis, yAxis, zAxis
 
 
 def weight_variable(shape):
@@ -75,8 +83,7 @@ dataset['y-axis'] = feature_normalize(dataset['y-axis'])
 dataset['z-axis'] = feature_normalize(dataset['z-axis'])
 
 print("Segment dataset for testing dataset")
-segments, labels = segment_signal(dataset)
-print(pd.get_dummies(labels))
+segments, labels, timestamp, xAxis, yAxis, zAxis = segment_signal(dataset)
 labels = np.asarray(pd.get_dummies(labels), dtype = np.int8)
 reshaped_segments = segments.reshape(len(segments), 1, 90, 3)
 
